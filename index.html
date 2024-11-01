@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专业图片编辑器</title>
+    <style>
+        :root {
+            --primary-color: #2962ff;
+            --primary-hover: #1565c0;
+            --background: #f8f9fa;
+            --card-background: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #606f7b;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        .control-panel {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        .preview-area {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .input-group:last-child {
+            border-bottom: none;
+        }
+
+        .input-group h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .file-upload {
+            width: 100%;
+            padding: 2rem;
+            border: 2px dashed #ddd;
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary-color);
+            background: rgba(41, 98, 255, 0.05);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-panel h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        #imageInfo {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .preview-area h3 {
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        #previewImage {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .dimension-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .quality-slider {
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        /* 添加响应式设计 */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-panel {
+                order: 2;
+            }
+            
+            .preview-area {
+                order: 1;
+            }
+        }
+
+        /* 添加加载动画 */
+        .loading {
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        /* 添加工具提示 */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>专业图片编辑器</h1>
+        <p>简单高效的图片处理工具</p>
+    </div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <div class="input-group">
+                <h3>上传图片</h3>
+                <div class="file-upload">
+                    <input type="file" 
+                           id="imageInput" 
+                           accept="image/jpeg, image/png, image/webp, image/gif, image/bmp, image/tiff, image/svg+xml, image/heic, image/avif" 
+                           style="display: block; 
+                                  width: 100%; 
+                                  height: 100%; 
+                                  opacity: 0; 
+                                  position: absolute; 
+                                  top: 0; 
+                                  left: 0; 
+                                  z-index: 1;">
+                    <span class="file-upload-label">点击或拖拽图片到此处</span>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+                        支持格式：JPG、PNG、WebP、GIF、BMP、TIFF、SVG、HEIC、AVIF
+                    </p>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <h3>图片尺寸调整</h3>
+                <div class="dimension-inputs">
+                    <div>
+                        <label for="widthInput">宽度 (px)</label>
+                        <input type="number" id="widthInput" data-tooltip="输入目标宽度">
+                    </div>
+                    <div>
+                        <label for="heightInput">高度 (px)</label>
+                        <input type="number" id="heightInput" data-tooltip="输入目标高度">
+                    </div>
+                </div>
+                <button onclick="resizeImage()">调整尺寸</button>
+                <button onclick="downloadImage('resize')" class="download-btn" style="display: none; margin-top: 10px; background: #28a745;">下载调整后的图片</button>
+            </div>
+
+            <div class="input-group">
+                <h3>图片压缩</h3>
+                <label for="quality">压缩质量</label>
+                <input type="range" id="quality" class="quality-slider" value="80" min="1" max="100">
+                <p style="text-align: center; color: var(--text-secondary);">
+                    <span id="qualityValue">80</span>%
+                </p>
+                <button onclick="compressImage()">压缩图片</button>
+                <button onclick="downloadImage('compress')" class="download-btn" style="display: none; margin-top: 10px; background: #28a745;">下载压缩后的图片</button>
+            </div>
+
+            <div class="info-panel">
+                <h3>图片信息</h3>
+                <div id="imageInfo">
+                    等待上传图片...
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-area">
+            <h3>预览</h3>
+            <img id="previewImage" alt="预览图片">
+        </div>
+    </div>
+
+    <script>
+        let originalImage = null;
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // 扩展支持的图片格式检查
+            const supportedFormats = [
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'image/gif',
+                'image/bmp',
+                'image/tiff',
+                'image/svg+xml',
+                'image/heic',
+                'image/avif'
+            ];
+            
+            if (!supportedFormats.includes(file.type)) {
+                alert('不支持的图片格式！请上传以下格式的图片：\nJPG、PNG、WebP、GIF、BMP、TIFF、SVG、HEIC、AVIF');
+                return;
+            }
+
+            // 显示原始文件大小
+            const originalSize = (file.size / 1024).toFixed(2);
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImage = img;
+                    document.getElementById('previewImage').src = event.target.result;
+                    
+                    // 更新图片信息
+                    document.getElementById('imageInfo').innerHTML = `
+                        原始尺寸: ${img.width} x ${img.height} 像素<br>
+                        原始文件大小: ${originalSize} KB
+                    `;
+                    
+                    // 设置默认的调整尺寸值
+                    document.getElementById('widthInput').value = img.width;
+                    document.getElementById('heightInput').value = img.height;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function resizeImage() {
+            if (!originalImage) return;
+
+            setLoading(true);
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const newWidth = parseInt(document.getElementById('widthInput').value);
+            const newHeight = parseInt(document.getElementById('heightInput').value);
+            
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+            
+            const resizedImage = canvas.toDataURL('image/jpeg', 1.0);
+            document.getElementById('previewImage').src = resizedImage;
+            
+            // 计算新文件大小
+            const base64str = resizedImage.split(',')[1];
+            const newSize = (atob(base64str).length / 1024).toFixed(2);
+            
+            // 更新信息
+            document.getElementById('imageInfo').innerHTML += `<br>调整后尺寸: ${newWidth} x ${newHeight} 像素`;
+            
+            // 显示下载按钮
+            document.querySelectorAll('.download-btn')[0].style.display = 'block';
+            
+            setLoading(false);
+        }
+
+        function compressImage() {
+            if (!originalImage) return;
+
+            setLoading(true);
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+            
+            ctx.drawImage(originalImage, 0, 0);
+            
+            const quality = document.getElementById('quality').value / 100;
+            const compressedImage = canvas.toDataURL('image/jpeg', quality);
+            document.getElementById('previewImage').src = compressedImage;
+            
+            // 计算压缩后的大小
+            const base64str = compressedImage.split(',')[1];
+            const compressedSize = (atob(base64str).length / 1024).toFixed(2);
+            
+            // 更新信息
+            document.getElementById('imageInfo').innerHTML += `<br>压缩后文件大小: ${compressedSize} KB`;
+            
+            // 显示下载按钮
+            document.querySelectorAll('.download-btn')[1].style.display = 'block';
+            
+            setLoading(false);
+        }
+
+        // 更新质量滑块值显示
+        document.getElementById('quality').addEventListener('input', function(e) {
+            document.getElementById('qualityValue').textContent = e.target.value;
+        });
+
+        // 简化拖拽上传逻辑
+        const dropZone = document.querySelector('.file-upload');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.style.borderColor = '#2962ff';
+            dropZone.style.background = 'rgba(41, 98, 255, 0.05)';
+        }
+
+        function unhighlight(e) {
+            dropZone.style.borderColor = '#ddd';
+            dropZone.style.background = 'transparent';
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            
+            if (file && file.type.startsWith('image/')) {
+                const input = document.getElementById('imageInput');
+                input.files = dt.files;
+                input.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // 添加加载状态指示
+        function setLoading(isLoading) {
+            const preview = document.getElementById('previewImage');
+            if (isLoading) {
+                preview.classList.add('loading');
+            } else {
+                preview.classList.remove('loading');
+            }
+        }
+
+        // 修改下载功能以保持原始格式
+        function downloadImage(type) {
+            const link = document.createElement('a');
+            const img = document.getElementById('previewImage');
+            const originalFormat = getOriginalFormat();
+            
+            // 设置文件名和格式
+            const date = new Date().toISOString().slice(0,19).replace(/[:]/g, '-');
+            const fileName = type === 'resize' ? 
+                           `resized_image_${date}.${originalFormat}` : 
+                           `compressed_image_${date}.${originalFormat}`;
+            
+            // 设置下载链接
+            link.download = fileName;
+            link.href = img.src;
+            
+            // 触发下载
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 获取原始图片格式
+        function getOriginalFormat() {
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return 'jpg';
+            
+            const format = file.type.split('/')[1];
+            // 处理特殊格式
+            switch(format) {
+                case 'jpeg':
+                    return 'jpg';
+                case 'svg+xml':
+                    return 'svg';
+                default:
+                    return format;
+            }
+        }
+    </script>
+</body>
+</html> 
